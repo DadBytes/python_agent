@@ -1,31 +1,26 @@
 import os
 
+MAX_CHARS = 10000
+
 
 def get_file_content(working_directory, file_path):
     abs_working_dir = os.path.abspath(working_directory)
-    abs_file_path = os.path.join(abs_working_dir, file_path)
+    abs_file_path = os.path.abspath(os.path.join(abs_working_dir, file_path))
 
     if not abs_file_path.startswith(abs_working_dir):
-        print(
-            f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
-        )
-        return
+        return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
 
     if not os.path.isfile(abs_file_path):
-        print(f'Error: File not found or is not a regular file: "{file_path}"')
-        return
+        return f'Error: File not found or is not a regular file: "{file_path}"'
 
-    with open(abs_file_path, "r") as file:
-        content = file.read()
+    try:
+        with open(abs_file_path, "r") as file:
+            content = file.read(MAX_CHARS)
 
-    if len(content) > 10000:
-        print(f'{content[:10000]}...File "{file_path}" truncated at 10000 characters')
+            if os.path.getsize(abs_file_path) > MAX_CHARS:
+                content += f'[...File "{file_path}" truncated at 10000 characters]'
 
-    else:
-        print(content)
+        return content
 
-
-# get_file_content("calculator", "main.py")
-# get_file_content("calculator", "pkg/calculator.py")
-# get_file_content("calculator", "/bin/cat")
-# get_file_content("calculator", "lorem.txt")  # this should raise an error
+    except Exception as e:
+        return f'Error reading file "{file_path}": {e}'

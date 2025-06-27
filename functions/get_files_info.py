@@ -2,30 +2,29 @@ import os
 
 
 def get_files_info(working_directory, directory=None):
+    abs_working_dir = os.path.abspath(working_directory)
+    search_dir = abs_working_dir
+
+    if directory:
+        search_dir = os.path.abspath(os.path.join(working_directory, directory))
+
     # searching in working dir
-    if directory is None or directory == ".":
-        search_dir = os.path.abspath(working_directory)
-        lst_dir_contents = os.listdir(search_dir)
-    else:
-        lst_working_dir = os.listdir(working_directory)
+    if not search_dir.startswith(abs_working_dir):
+        return f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
 
-        if directory not in lst_working_dir:
-            print(
-                f'Error: Cannot list "{directory}" as it is outside the permitted working directory'
+    if not os.path.isdir(search_dir):
+        return f'Error: "{directory}" is not a directory'
+
+    try:
+        lst_dir_contents = os.listdir(search_dir)
+        files_info = []
+
+        for item in lst_dir_contents:
+            full_item_path = os.path.join(search_dir, item)
+            files_info.append(
+                f"- {item}: file_size={os.path.getsize(full_item_path)} bytes, is_dir={os.path.isdir(full_item_path)}"
             )
-            return
+        return "\n".join(files_info)
 
-        if not os.path.isdir(
-            os.path.join(os.path.abspath(working_directory), directory)
-        ):
-            print(f'Error: "{directory}" is not a directory')
-            return
-
-        search_dir = os.path.join(os.path.abspath(working_directory), directory)
-        lst_dir_contents = os.listdir(search_dir)
-
-    for item in lst_dir_contents:
-        full_item = os.path.join(search_dir, item)
-        print(
-            f"- {item}: file_size={os.path.getsize(full_item)} bytes, is_dir={os.path.isdir(full_item)}"
-        )
+    except Exception as e:
+        return f"Error listing files: {e}"
